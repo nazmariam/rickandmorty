@@ -1,0 +1,32 @@
+{
+  "name": "weather-app",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "parcel -p 3000 src/index.html",
+    "build": "parcel build src/index.html --out-dir production/ --public-url ./",
+    "push-dist": "push-dir --dir=production/ --branch=gh-pages"
+  },
+  "repository": "https://github.com/nazmariam/weather-app.git",
+  "author": "nazmariam <fedirko.mary@gmail.com>",
+  "license": "MIT",
+  "homepage": "https://github.com/nazmariam/weather-app#readme",
+  "devDependencies": {
+    "autoprefixer": "^9.4.9",
+    "babel-cli": "^6.26.0",
+    "babel-core": "^6.26.3",
+    "babel-preset-env": "^1.7.0",
+    "node-sass": "^4.11.0",
+    "parcel-bundler": "^1.11.0",
+    "sass": "^1.17.3"
+  },
+  "dependencies": {
+    "@babel/polyfill": "^7.4.0",
+    "components": "^0.1.0",
+    "core-js": "^3.0.0",
+    "idb": "^4.0.0",
+    "normalize.css": "^8.0.1",
+    "regenerator-runtime": "^0.13.2",
+    "scripts": "^0.1.0"
+  }
+}
