@@ -290,7 +290,7 @@ function () {
             // string
             var _container2 = document.createElement(element.tag);
 
-            if (element.content) {
+            if (element.content !== undefined) {
               _container2.innerHTML = element.content;
             } // ensure following element properties are Array
 
@@ -311,6 +311,13 @@ function () {
               element.attributes.forEach(function (attributeSpec) {
                 _container2.setAttribute(attributeSpec.name, attributeSpec.value);
               });
+            } // process eventHandlers
+
+
+            if (element.eventHandlers) {
+              element.eventHandlers.forEach(function (attributeSpec) {
+                _container2.addEventListener(attributeSpec.eventType, attributeSpec.eventMethod);
+              });
             } // process children
 
 
@@ -319,12 +326,6 @@ function () {
                 var htmlElement = _this2._vDomPrototypeElementToHtmlElement(el);
 
                 _container2.appendChild(htmlElement);
-              });
-            }
-
-            if (element.eventHandlers) {
-              element.eventHandlers.forEach(function (attributeSpec) {
-                _container2.addEventListener(attributeSpec.eventType, attributeSpec.eventMethod);
               });
             }
 
@@ -365,7 +366,7 @@ function () {
   _createClass(RickandmortyAPI, [{
     key: "getCharacterList",
     value: function getCharacterList(query) {
-      return fetch('https://rickandmortyapi.com/api/character', {
+      return fetch('https://rickandmortyapi.com/api/' + query, {
         method: 'get'
       }).then(function (response) {
         if (response.ok) return response.json();
@@ -473,10 +474,11 @@ function (_Component) {
 
     _classCallCheck(this, CharacterItem);
 
-    _this = _possibleConstructorReturn(this, _getPrototypeOf(CharacterItem).call(this, host, props));
+    _this = _possibleConstructorReturn(this, _getPrototypeOf(CharacterItem).call(this, host, props)); // this.host = document.querySelector('.modal');
 
-    _AppState.default.watch('props', _this.updateMyself); // AppState.watch('clicks',this.updateMyself);
+    _this.id = _this.props.id;
 
+    _this.getItems();
 
     return _this;
   }
@@ -484,27 +486,31 @@ function (_Component) {
   _createClass(CharacterItem, [{
     key: "bindBeforeRender",
     value: function bindBeforeRender() {
-      // this.requestWeather = this.requestWeather.bind(this);
-      this.updateMyself = this.updateMyself.bind(this);
       this.state = {
-        id: this.props
+        item: {}
       };
     }
   }, {
-    key: "updateMyself",
-    value: function updateMyself(subState) {
-      //
-      var newState = {
-        id: subState
-      }; // do update
+    key: "getItems",
+    value: function getItems() {
+      var _this2 = this;
 
-      this.updateState(newState);
+      _RickandmortyAPI.default.getCharacterList("character/".concat(this.id)).then(function (res) {
+        _this2.updateState({
+          item: res
+        });
+      }).catch(function (err) {
+        _this2.error = err;
+
+        _this2.render();
+      });
     }
   }, {
     key: "render",
     value: function render() {
+      var item = this.state.item;
       document.querySelector('body').addEventListener('click', function () {
-        location.reload();
+        document.querySelector('.modal').innerHTML = '';
       });
       return [{
         tag: 'div',
@@ -513,30 +519,30 @@ function (_Component) {
           tag: 'img',
           attributes: [{
             name: 'src',
-            value: this.state.id.image
+            value: item.image
           }]
         }, {
           tag: 'span',
           classList: 'item-character',
-          content: this.state.id.name
+          content: item.name
         }, {
           tag: 'span',
           classList: 'item-character',
-          content: this.state.id.gender
+          content: item.gender
         }, {
           tag: 'span',
           classList: 'item-character',
-          content: this.state.id.location.name
+          content: item.location ? item.location.name : '-'
         }, {
           tag: 'span',
           classList: 'item-character',
-          content: this.state.id.species
+          content: item.species
         }, {
           tag: 'span',
           classList: 'item-character',
-          content: this.state.id.status
+          content: item.status
         }]
-      }];
+      }]; // return 'test'
     }
   }]);
 
@@ -619,8 +625,8 @@ function (_Component) {
     key: "bindBeforeRender",
     value: function bindBeforeRender() {
       // this.requestWeather = this.requestWeather.bind(this);
-      this.updateMyself = this.updateMyself.bind(this);
-      this.onClick = this.onClick.bind(this);
+      this.updateMyself = this.updateMyself.bind(this); // this.onClick = this.onClick.bind(this);
+
       this.state = {
         result: [],
         firstRun: true
@@ -636,59 +642,71 @@ function (_Component) {
       }; // do update
 
       this.updateState(newState);
-    }
-  }, {
-    key: "onClick",
-    value: function onClick(e) {
-      e.stopPropagation();
-      console.log('!!!!!!!!!!*****', this.state.result);
-      var hst = document.getElementById('app');
-      var id = e.target.closest('.forecast-item').getAttribute('data-id');
-      new _CharacterItem.CharacterItem(hst, this.state.result[id]); // AppState.update('props',{data, i});
-      // console.log(i);
-      // AppState.update('clicks',data);
-    }
+    } // onClick(e){
+    //     e.stopPropagation();
+    //     console.log('!!!!!!!!!!*****',this.state.result);
+    //
+    //     let hst = document.getElementById('app');
+    //     let id = e.target.closest('.forecast-item').getAttribute('data-id');
+    //     new CharacterItem(hst,this.state.result[id])
+    //     // AppState.update('props',{data, i});
+    //     // console.log(i);
+    //     // AppState.update('clicks',data);
+    // }
+
   }, {
     key: "render",
     value: function render() {
       var _this2 = this;
 
-      if (this.state.firstRun) {
-        _RickandmortyAPI.default.getCharacterList().then(function (data) {
-          if (!data) {
-            return;
-          }
+      _RickandmortyAPI.default.getCharacterList('character').then(function (data) {
+        if (!data) {
+          return;
+        }
 
-          console.log(data.results);
-          _this2.state.firstRun = false;
+        if (_this2.state.firstRun) {
+          // this.state.firstRun = false;
+          // AppState.update('props',data);
+          _this2.updateState({
+            result: data.results,
+            firstRun: false
+          });
 
-          _AppState.default.update('props', data);
-        });
-      }
+          console.log(_this2.state);
+        }
+      });
 
       return this.state.result.map(function (item, ind, arr) {
         return {
           tag: 'li',
           classList: 'forecast-item',
           children: [{
-            tag: 'span',
-            content: item.name
-          }, {
-            tag: 'img',
+            tag: 'a',
             attributes: [{
-              name: 'src',
-              value: item.image
+              name: 'href',
+              value: "#/item/".concat(item.id)
+            }],
+            children: [{
+              tag: 'span',
+              content: item.name
+            }, {
+              tag: 'img',
+              attributes: [{
+                name: 'src',
+                value: item.image
+              }]
             }]
           }],
           attributes: [{
             name: 'data-id',
             value: item.id - 1
-          }],
-          eventHandlers: [{
-            eventType: 'click',
-            eventMethod: _this2.onClick // bind(this): constructor(){this.method = this.method.bind(this);}
+          }] // eventHandlers: [
+          //     {
+          //         eventType: 'click',
+          //         eventMethod: this.onClick, // bind(this): constructor(){this.method = this.method.bind(this);}
+          //     },
+          // ],
 
-          }]
         };
       });
     }
@@ -714,7 +732,212 @@ Object.defineProperty(exports, "CharacterList", {
 var _CharacterList = _interopRequireDefault(require("./CharacterList"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-},{"./CharacterList":"js/components/CharacterList/CharacterList.js"}],"js/components/App/App.js":[function(require,module,exports) {
+},{"./CharacterList":"js/components/CharacterList/CharacterList.js"}],"js/components/NotFound/NotFound.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _Component2 = _interopRequireDefault(require("../../framework/Component"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
+
+function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
+
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
+
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
+
+var NotFound =
+/*#__PURE__*/
+function (_Component) {
+  _inherits(NotFound, _Component);
+
+  function NotFound(host, props) {
+    _classCallCheck(this, NotFound);
+
+    return _possibleConstructorReturn(this, _getPrototypeOf(NotFound).call(this, host, props)); // this.host = document.querySelector('.modal');
+  }
+
+  _createClass(NotFound, [{
+    key: "render",
+    value: function render() {
+      this.host = document.querySelector('.modal');
+      document.querySelector('body').addEventListener('click', function () {
+        document.querySelector('.modal').innerHTML = '';
+      });
+      return [{
+        tag: 'div',
+        classList: 'not-found',
+        content: 'Person is not found'
+      }];
+    }
+  }]);
+
+  return NotFound;
+}(_Component2.default);
+
+exports.default = NotFound;
+},{"../../framework/Component":"js/framework/Component.js"}],"js/components/NotFound/index.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+Object.defineProperty(exports, "NotFound", {
+  enumerable: true,
+  get: function () {
+    return _NotFound.default;
+  }
+});
+
+var _NotFound = _interopRequireDefault(require("./NotFound"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+},{"./NotFound":"js/components/NotFound/NotFound.js"}],"js/routes/routes.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.routes = void 0;
+
+var _CharacterList = require("../components/CharacterList");
+
+var _CharacterItem = require("../components/CharacterItem");
+
+var _NotFound = require("../components/NotFound");
+
+var routes = [{
+  path: '' // :TODO component
+
+}, {
+  path: 'item/:id',
+  component: _CharacterItem.CharacterItem
+}, {
+  path: '**',
+  component: _NotFound.NotFound
+}];
+exports.routes = routes;
+},{"../components/CharacterList":"js/components/CharacterList/index.js","../components/CharacterItem":"js/components/CharacterItem/index.js","../components/NotFound":"js/components/NotFound/index.js"}],"js/framework/Router.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+var Router =
+/*#__PURE__*/
+function () {
+  function Router(host, routes, App) {
+    _classCallCheck(this, Router);
+
+    this.host = host;
+    this.routes = routes;
+    this.routerOutlet = document.querySelector('.modal');
+    this.app = new App(host, {
+      routerOutlet: this.routerOutlet
+    });
+    this.notFound = this.routes.find(function (route) {
+      return route.path === '**';
+    });
+    window.addEventListener('hashchange', this.handleUrlChange.bind(this));
+  }
+
+  _createClass(Router, [{
+    key: "init",
+    value: function init() {
+      this.handleUrlChange();
+    }
+  }, {
+    key: "handleUrlChange",
+    value: function handleUrlChange() {
+      if (!location.hash) {
+        location.assign("/#".concat(location.pathname));
+      } else {
+        var browserUrlArr = location.hash.split('/').slice(1);
+        this.findRoute(browserUrlArr);
+      }
+    }
+  }, {
+    key: "findRoute",
+    value: function findRoute(browserUrlArr) {
+      var _this = this;
+
+      var foundedRoute = this.routes.find(function (route) {
+        return _this.isUrlEqualRoute(browserUrlArr, route);
+      });
+
+      if (!foundedRoute) {
+        this.renderNewComponent(this.notFound);
+      } else {
+        if (foundedRoute.path) {
+          var params = this.getParamsFromUrl(foundedRoute.path, browserUrlArr);
+          this.renderNewComponent(foundedRoute, params);
+        }
+      }
+    }
+  }, {
+    key: "getParamsFromUrl",
+    value: function getParamsFromUrl(routePath, browserUrlArr) {
+      var routePathArr = routePath.split('/');
+      var isEmptyPath = browserUrlArr.length === 1;
+
+      if (isEmptyPath) {
+        return;
+      }
+
+      return routePathArr.reduce(function (acc, pathPart, i) {
+        if (pathPart !== browserUrlArr[i]) {
+          acc[pathPart.slice(1)] = browserUrlArr[i];
+        }
+
+        return acc;
+      }, {});
+    }
+  }, {
+    key: "isUrlEqualRoute",
+    value: function isUrlEqualRoute(browserUrlArr, route) {
+      var routePathArr = route.path.split('/');
+      return browserUrlArr.every(function (urlPart, i) {
+        var isRoutePathEqualBrowserUrl = routePathArr[i] === urlPart;
+        var isRouteArrPartContainsParam = routePathArr[i].startsWith(':');
+        return isRoutePathEqualBrowserUrl || isRouteArrPartContainsParam;
+      });
+    }
+  }, {
+    key: "renderNewComponent",
+    value: function renderNewComponent(route, params) {
+      var newComponent = new route.component(this.routerOutlet, params);
+    }
+  }]);
+
+  return Router;
+}();
+
+exports.default = Router;
+},{}],"js/components/App/App.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -754,17 +977,11 @@ function (_Component) {
   _inherits(App, _Component);
 
   function App(host) {
-    var _this;
-
     var props = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
     _classCallCheck(this, App);
 
-    _this = _possibleConstructorReturn(this, _getPrototypeOf(App).call(this, host, props));
-
-    _AppState.default.watch('clicks', _this.updateMyself);
-
-    return _this;
+    return _possibleConstructorReturn(this, _getPrototypeOf(App).call(this, host, props)); // AppState.watch('clicks',this.updateMyself);
   }
 
   _createClass(App, [{
@@ -813,10 +1030,17 @@ require("./../sass/main.scss");
 
 require("./../sass/_media.scss");
 
+var _routes = require("./routes/routes");
+
+var _Router = _interopRequireDefault(require("./framework/Router"));
+
 var _App = require("./components/App/");
 
-new _App.App(document.getElementById('app'));
-},{"../../node_modules/normalize.css/normalize.css":"../node_modules/normalize.css/normalize.css","./../sass/main.scss":"sass/main.scss","./../sass/_media.scss":"sass/_media.scss","./components/App/":"js/components/App/index.js"}],"../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var router = new _Router.default(document.getElementById('app'), _routes.routes, _App.App);
+router.init();
+},{"../../node_modules/normalize.css/normalize.css":"../node_modules/normalize.css/normalize.css","./../sass/main.scss":"sass/main.scss","./../sass/_media.scss":"sass/_media.scss","./routes/routes":"js/routes/routes.js","./framework/Router":"js/framework/Router.js","./components/App/":"js/components/App/index.js"}],"../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -843,7 +1067,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "42401" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "35395" + '/');
 
   ws.onmessage = function (event) {
     var data = JSON.parse(event.data);

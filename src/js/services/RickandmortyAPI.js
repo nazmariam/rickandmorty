@@ -4,7 +4,7 @@ class RickandmortyAPI {
     }
 
     getCharacterList(query) {
-        return fetch('https://rickandmortyapi.com/api/character', {method: 'get'})
+        return fetch('https://rickandmortyapi.com/api/'+query, {method: 'get'})
             .then(response => {
                 if (response.ok)
                     return response.json();

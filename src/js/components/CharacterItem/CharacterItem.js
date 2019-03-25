@@ -6,31 +6,30 @@ import AppState from "../../services/AppState";
 export default class CharacterItem extends  Component{
     constructor(host,props){
         super(host,props);
-        AppState.watch('props',this.updateMyself);
-        // AppState.watch('clicks',this.updateMyself);
-
+        // this.host = document.querySelector('.modal');
+        this.id=this.props.id;
+        this.getItems();
     }
     bindBeforeRender() {
-        // this.requestWeather = this.requestWeather.bind(this);
-        this.updateMyself = this.updateMyself.bind(this);
+
         this.state = {
-            id:this.props,
+           item:{},
         }
     };
-
-    updateMyself(subState) {
-        //
-
-        let newState= {
-            id: subState,
-        };
-        // do update
-        this.updateState(newState);
+    getItems() {
+        RickandmortyAPI.getCharacterList(`character/${this.id}`).then(res => {
+            this.updateState({item: res});
+        }).catch(err => {
+            this.error = err;
+            this.render();
+        });
     }
+
     render() {
-    document.querySelector('body').addEventListener('click',function () {
-        location.reload();
-    });
+        const {item} = this.state;
+        document.querySelector('body').addEventListener('click',function () {
+            document.querySelector('.modal').innerHTML ='';
+        });
         return [
             {
                 tag: 'div',
@@ -41,38 +40,39 @@ export default class CharacterItem extends  Component{
                         attributes:[
                             {
                                 name: 'src',
-                                value: this.state.id.image
+                                value: item.image
                             }
                         ]
                     },
                     {
                         tag:'span',
                         classList: 'item-character',
-                        content:this.state.id.name,
+                        content:item.name,
                     },
                     {
                         tag:'span',
                         classList: 'item-character',
-                        content:this.state.id.gender,
+                        content:item.gender,
                     },
                     {
                         tag:'span',
                         classList: 'item-character',
-                        content:this.state.id.location.name,
+                        content:(item.location)?item.location.name:'-',
                     },
                     {
                         tag:'span',
                         classList: 'item-character',
-                        content:this.state.id.species,
+                        content:item.species,
                     },
                     {
                         tag:'span',
                         classList: 'item-character',
-                        content:this.state.id.status,
+                        content:item.status,
                     },
                 ]
             }
         ]
+        // return 'test'
     }
 }
 

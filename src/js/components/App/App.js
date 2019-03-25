@@ -5,7 +5,7 @@ import AppState from "../../services/AppState";
 export default class App extends Component{
     constructor(host, props={}){
         super(host, props);
-        AppState.watch('clicks',this.updateMyself);
+        // AppState.watch('clicks',this.updateMyself);
     }
     bindBeforeRender() {
         this.state = {

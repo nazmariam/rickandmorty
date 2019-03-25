@@ -414,11 +414,7 @@ body {
   text-align: center;
   background-color: #726875;
   padding: 16px 0;
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  cursor: pointer; }
+  list-style: none; }
   .forecast-item:hover {
     background-color: #927e7c; }
   .forecast-item img {
@@ -449,6 +445,12 @@ table svg {
   background-color: #9c959c; }
   .forecast-item:nth-child(odd):hover {
     background-color: #927e7c; }
+
+.forecast-item a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer; }
 
 .day {
   display: block; }
@@ -630,10 +632,23 @@ select {
   padding: 16px; }
 
 .item-character {
-  display: block;
   font-size: 1.2em;
   color: #fff;
-  text-align: center; }
+  text-align: center;
+  display: block; }
+
+.modal {
+  position: fixed;
+  background-color: #927e7c;
+  top: 50%;
+  margin-top: -15%; }
+
+.not-found {
+  padding: 40px;
+  border: 4px solid #4c2628; }
+
+.invisible {
+  display: none; }
 
 @keyframes infinite-spinning {
   from {

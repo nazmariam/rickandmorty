@@ -33,6 +33,10 @@ export default class Component {
         return 'OMG! They wanna see me!';
     }
 
+
+
+
+
     _vDomPrototypeElementToHtmlElement(element) {
         if (typeof element === 'string') {
             let container;
@@ -47,13 +51,15 @@ export default class Component {
         } else {
             if (element.tag) {
                 if (typeof element.tag === 'function') {
+
                     const container = document.createElement('ul');
                     new element.tag(container, element.props);
+
                     return container;
                 } else {
                     // string
                     const container = document.createElement(element.tag);
-                    if (element.content) {
+                    if (element.content !== undefined) {
                         container.innerHTML = element.content;
                     }
 
@@ -72,17 +78,18 @@ export default class Component {
                         });
                     }
 
+                    // process eventHandlers
+                    if (element.eventHandlers){
+                        element.eventHandlers.forEach(attributeSpec => {
+                            container.addEventListener(attributeSpec.eventType, attributeSpec.eventMethod);
+                        });
+                    }
+
                     // process children
                     if (element.children) {
                         element.children.forEach(el => {
                             const htmlElement = this._vDomPrototypeElementToHtmlElement(el);
                             container.appendChild(htmlElement);
-                        });
-                    }
-
-                    if (element.eventHandlers){
-                        element.eventHandlers.forEach(attributeSpec => {
-                            container.addEventListener(attributeSpec.eventType, attributeSpec.eventMethod);
                         });
                     }
 
